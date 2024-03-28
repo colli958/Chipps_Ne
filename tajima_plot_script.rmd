@@ -1,0 +1,396 @@
+
+```{r}
+
+rm(list=ls())
+# Install and load required packages
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  install.packages("ggplot2")
+}
+library(ggplot2)
+library(dplyr)
+
+#read in angsd_sfs theta output for fall samples
+angsd_sfs_fall1996_2000_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_fall1996_2000.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_fall2001_2005_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_fall2001_2005.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_fall2006_2010_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_fall2006_2010.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_fall2011_2015_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_fall2011_2015.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_fall2016_2018_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_fall2016_2018.thetas.windows.gz.pestPG", header = T)
+#read in angsd_sfs theta output for spring Butte samples
+angsd_sfs_springbutte1996_2000_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_springbutte1996_2000.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_springbutte2001_2005_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_springbutte2001_2005.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_springbutte2006_2010_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_springbutte2001_2005.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_springbutte2011_2015_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_springbutte2011_2015.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_springbutte2016_2018_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_springbutte2016_2018.thetas.windows.gz.pestPG", header = T)
+#read in angsd_sfs theta output for spring Mill Deer samples
+angsd_sfs_springmilldeer1996_2000_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_springbutte1996_2000.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_springmilldeer2001_2005_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_springbutte2001_2005.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_springmilldeer2006_2010_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_springbutte2006_2010.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_springmilldeer2016_2018_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_springbutte2016_2018.thetas.windows.gz.pestPG", header = T)
+#read in angsd_sfs theta output for winter samples
+angsd_sfs_winter1996_2000_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_winter1996_2000.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_winter2001_2005_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_winter2001_2005.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_winter2006_2010_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_winter2006_2010.thetas.windows.gz.pestPG", header = T)
+angsd_sfs_winter2016_2018_pestPG<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/angsd_sfs_winter2016_2018.thetas.windows.gz.pestPG", header = T)
+      
+```
+
+```{r}
+
+
+
+# dummy data frames for populations without enough individuals for histograms
+angsd_sfs_springmilldeer2011_2015_pestPG<-data.frame(matrix(ncol = ncol(angsd_sfs_springmilldeer1996_2000_pestPG), nrow = 1))
+colnames(angsd_sfs_springmilldeer2011_2015_pestPG)<-colnames(angsd_sfs_springmilldeer1996_2000_pestPG)
+angsd_sfs_winter2011_2015_pestPG<-data.frame(matrix(ncol = ncol(angsd_sfs_winter1996_2000_pestPG), nrow = 1))
+colnames(angsd_sfs_winter2011_2015_pestPG)<-colnames(angsd_sfs_winter1996_2000_pestPG)  
+
+#add column with name for histograms
+angsd_sfs_fall1996_2000_pestPG$group <- "F 1996-2000 n=471"
+angsd_sfs_fall2001_2005_pestPG$group <- "F 2001-2005 n=654"
+angsd_sfs_fall2006_2010_pestPG$group <- "F 2006-2010 n=346"
+angsd_sfs_fall2011_2015_pestPG$group <- "F 2011-2015 n=307"
+angsd_sfs_fall2016_2018_pestPG$group <- "F 2016-2018 n=240"
+angsd_sfs_springbutte1996_2000_pestPG$group <- "SB 1996-2000 n=45"
+angsd_sfs_springbutte2001_2005_pestPG$group <- "SB 2001-2005 n=56"
+angsd_sfs_springbutte2006_2010_pestPG$group <- "SB 2006-2010 n=35"
+angsd_sfs_springbutte2011_2015_pestPG$group <- "SB 2011-2015 n=5"
+angsd_sfs_springbutte2016_2018_pestPG$group <- "SB 2016-2018 n=25"
+angsd_sfs_springmilldeer1996_2000_pestPG$group <- "SMD 1996-2000 n=45"
+angsd_sfs_springmilldeer2001_2005_pestPG$group <- "SMD 2001-2005 n=65"
+angsd_sfs_springmilldeer2006_2010_pestPG$group <- "SMD 2006-2010 n=30"
+angsd_sfs_springmilldeer2011_2015_pestPG$group <- "SMD 2011-2015 n=3"
+angsd_sfs_springmilldeer2016_2018_pestPG$group <- "SMD 2016-2018 n=16"
+angsd_sfs_winter1996_2000_pestPG$group <- "W 1996-2000 n=52"
+angsd_sfs_winter2001_2005_pestPG$group <- "W 2001-2005 n=98"
+angsd_sfs_winter2006_2010_pestPG$group <- "W 2006-2010 n=26"
+angsd_sfs_winter2011_2015_pestPG$group <- "W 2011-2015 n=0"
+angsd_sfs_winter2016_2018_pestPG$group <- "W 2016-2018 n=44"
+
+# created combined data set for histograms
+combined_tajima <- rbind(angsd_sfs_fall1996_2000_pestPG, angsd_sfs_fall2001_2005_pestPG, angsd_sfs_fall2006_2010_pestPG, angsd_sfs_fall2011_2015_pestPG, angsd_sfs_fall2016_2018_pestPG, angsd_sfs_springbutte1996_2000_pestPG, angsd_sfs_springbutte2001_2005_pestPG, angsd_sfs_springbutte2006_2010_pestPG, angsd_sfs_springbutte2011_2015_pestPG, angsd_sfs_springbutte2016_2018_pestPG, angsd_sfs_springmilldeer1996_2000_pestPG, angsd_sfs_springmilldeer2001_2005_pestPG, angsd_sfs_springmilldeer2006_2010_pestPG, angsd_sfs_springmilldeer2011_2015_pestPG, angsd_sfs_springmilldeer2016_2018_pestPG, angsd_sfs_winter1996_2000_pestPG, angsd_sfs_winter2001_2005_pestPG, angsd_sfs_winter2006_2010_pestPG, angsd_sfs_winter2011_2015_pestPG, angsd_sfs_winter2016_2018_pestPG)
+
+
+#for tiff format
+tiff("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/tajima_histogram.tiff", height = 20, width = 20, units = 'cm', res = 500)
+# Create a histogram using ggplot2 with facets
+ggplot(combined_tajima, aes(x = Tajima, fill = group)) +
+  geom_histogram(binwidth = 0.1, position = "identity", alpha = 0.7) +
+  labs(title = "Histograms of Tajima's D Values", x = "Tajima's D Values", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "none") +  # Adjust legend position or remove with "none" as needed
+  facet_wrap(~group, scales = "fixed", ncol = 5, strip.position = "bottom") + # adjust the number of columns in the plot with ncol
+  theme(strip.text.x = element_text(angle = 0, hjust = 0.5, size=6))  # Rotate labels # center the labels # adjust the size of the labels
+#final format command that will output image
+dev.off()
+
+# !!!! interpretation = A Tajima's D value below −2 or above 2 is generally considered to be a strong indication that a gene is not evolving neutrally. Genes with a Tajima's D value below −2 have an excess of rare alleles, indicating positive selection or a selective sweep. !!!!
+
+```
+
+```{r}
+
+# Remove rows where 'Tajima' is equal to 0
+angsd_sfs_fall1996_2000_pestPG_filtered <- angsd_sfs_fall1996_2000_pestPG[angsd_sfs_fall1996_2000_pestPG$Tajima != 0, ]
+angsd_sfs_fall2001_2005_pestPG_filtered <- angsd_sfs_fall2001_2005_pestPG[angsd_sfs_fall2001_2005_pestPG$Tajima != 0, ]
+angsd_sfs_fall2006_2010_pestPG_filtered <- angsd_sfs_fall2006_2010_pestPG[angsd_sfs_fall2006_2010_pestPG$Tajima != 0, ]
+angsd_sfs_fall2011_2015_pestPG_filtered <- angsd_sfs_fall2011_2015_pestPG[angsd_sfs_fall2011_2015_pestPG$Tajima != 0, ]
+angsd_sfs_fall2016_2018_pestPG_filtered <- angsd_sfs_fall2016_2018_pestPG[angsd_sfs_fall2016_2018_pestPG$Tajima != 0, ]
+angsd_sfs_springbutte1996_2000_pestPG_filtered <- angsd_sfs_springbutte1996_2000_pestPG[angsd_sfs_springbutte1996_2000_pestPG$Tajima != 0, ]
+angsd_sfs_springbutte2001_2005_pestPG_filtered <- angsd_sfs_springbutte2001_2005_pestPG[angsd_sfs_springbutte2001_2005_pestPG$Tajima != 0, ]
+angsd_sfs_springbutte2006_2010_pestPG_filtered <- angsd_sfs_springbutte2006_2010_pestPG[angsd_sfs_springbutte2006_2010_pestPG$Tajima != 0, ]
+angsd_sfs_springbutte2011_2015_pestPG_filtered <- angsd_sfs_springbutte2011_2015_pestPG[angsd_sfs_springbutte2011_2015_pestPG$Tajima != 0, ]
+angsd_sfs_springbutte2016_2018_pestPG_filtered <- angsd_sfs_springbutte2016_2018_pestPG[angsd_sfs_springbutte2016_2018_pestPG$Tajima != 0, ]
+angsd_sfs_springmilldeer1996_2000_pestPG_filtered <- angsd_sfs_springmilldeer1996_2000_pestPG[angsd_sfs_springmilldeer1996_2000_pestPG$Tajima != 0, ]
+angsd_sfs_springmilldeer2001_2005_pestPG_filtered <- angsd_sfs_springmilldeer2001_2005_pestPG[angsd_sfs_springmilldeer2001_2005_pestPG$Tajima != 0, ]
+angsd_sfs_springmilldeer2006_2010_pestPG_filtered <- angsd_sfs_springmilldeer2006_2010_pestPG[angsd_sfs_springmilldeer2006_2010_pestPG$Tajima != 0, ]
+angsd_sfs_springmilldeer2011_2015_pestPG_filtered <- angsd_sfs_springmilldeer2011_2015_pestPG
+angsd_sfs_springmilldeer2016_2018_pestPG_filtered <- angsd_sfs_springmilldeer2016_2018_pestPG[angsd_sfs_springmilldeer2016_2018_pestPG$Tajima != 0, ]
+angsd_sfs_winter1996_2000_pestPG_filtered <- angsd_sfs_winter1996_2000_pestPG[angsd_sfs_winter1996_2000_pestPG$Tajima != 0, ]
+angsd_sfs_winter2001_2005_pestPG_filtered <- angsd_sfs_winter2001_2005_pestPG[angsd_sfs_winter2001_2005_pestPG$Tajima != 0, ]
+angsd_sfs_winter2006_2010_pestPG_filtered <- angsd_sfs_winter2006_2010_pestPG[angsd_sfs_winter2006_2010_pestPG$Tajima != 0, ]
+angsd_sfs_winter2011_2015_pestPG_filtered <- angsd_sfs_winter2011_2015_pestPG
+angsd_sfs_winter2016_2018_pestPG_filtered <- angsd_sfs_winter2016_2018_pestPG[angsd_sfs_winter2016_2018_pestPG$Tajima != 0, ]
+
+combined_tajima_filtered <- rbind(angsd_sfs_fall1996_2000_pestPG_filtered, angsd_sfs_fall2001_2005_pestPG_filtered, angsd_sfs_fall2006_2010_pestPG_filtered, angsd_sfs_fall2011_2015_pestPG_filtered, angsd_sfs_fall2016_2018_pestPG_filtered, angsd_sfs_springbutte1996_2000_pestPG_filtered, angsd_sfs_springbutte2001_2005_pestPG_filtered, angsd_sfs_springbutte2006_2010_pestPG_filtered, angsd_sfs_springbutte2011_2015_pestPG_filtered, angsd_sfs_springbutte2016_2018_pestPG_filtered, angsd_sfs_springmilldeer1996_2000_pestPG_filtered, angsd_sfs_springmilldeer2001_2005_pestPG_filtered, angsd_sfs_springmilldeer2006_2010_pestPG_filtered, angsd_sfs_springmilldeer2011_2015_pestPG_filtered, angsd_sfs_springmilldeer2016_2018_pestPG_filtered, angsd_sfs_winter1996_2000_pestPG_filtered, angsd_sfs_winter2001_2005_pestPG_filtered, angsd_sfs_winter2006_2010_pestPG_filtered, angsd_sfs_winter2011_2015_pestPG_filtered, angsd_sfs_winter2016_2018_pestPG_filtered)
+  
+# Calculate the mean Tajima value for each group
+mean_values <- combined_tajima_filtered %>%
+  group_by(group) %>%
+  summarise(mean_tajima = mean(Tajima, na.rm = TRUE))
+
+#for tiff format
+tiff("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/tajima/tajima_histogram_nozeroes.tiff", height = 20, width = 20, units = 'cm', res = 500)
+# Create a histogram using ggplot2 with facets
+ggplot(combined_tajima_filtered, aes(x = Tajima, fill = group)) +
+  geom_histogram(binwidth = 0.1, position = "identity", alpha = 0.7) +
+  geom_vline(data = mean_values, aes(xintercept = mean_tajima, color = group), linetype = "dashed", linewidth = 1) +  # Add mean line
+  labs(title = "Histograms of Tajima's D Values", x = "Tajima's D Values", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "none") +  # Adjust legend position or remove with "none" as needed
+  facet_wrap(~group, scales = "fixed", ncol = 5, strip.position = "bottom") + # adjust the number of columns in the plot with ncol
+  theme(strip.text.x = element_text(angle = 0, hjust = 0.5, size=6))  # Rotate labels # center the labels # adjust the size of the labels
+#final format command that will output image
+dev.off()
+
+```
+
+```{r}
+
+#Do Kolmogorov–Smirnov (KS) tests to statistically compare differences between Tajima's D distributions over time for each population
+
+ks_result_fall96_01 <- ks.test(angsd_sfs_fall1996_2000_pestPG_filtered$Tajima, angsd_sfs_fall2001_2005_pestPG_filtered$Tajima)
+ks_result_fall01_06 <- ks.test(angsd_sfs_fall2001_2005_pestPG_filtered$Tajima, angsd_sfs_fall2006_2010_pestPG_filtered$Tajima)
+ks_result_fall06_11 <- ks.test(angsd_sfs_fall2006_2010_pestPG_filtered$Tajima, angsd_sfs_fall2011_2015_pestPG_filtered$Tajima)
+ks_result_fall11_16 <- ks.test(angsd_sfs_fall2011_2015_pestPG_filtered$Tajima, angsd_sfs_fall2016_2018_pestPG_filtered$Tajima)
+ks_result_fall96_16 <- ks.test(angsd_sfs_fall1996_2000_pestPG_filtered$Tajima, angsd_sfs_fall2016_2018_pestPG_filtered$Tajima)
+
+ks_result_springbutte96_01 <- ks.test(angsd_sfs_springbutte1996_2000_pestPG_filtered$Tajima, angsd_sfs_springbutte2001_2005_pestPG_filtered$Tajima)
+ks_result_springbutte01_06 <- ks.test(angsd_sfs_springbutte2001_2005_pestPG_filtered$Tajima, angsd_sfs_springbutte2006_2010_pestPG_filtered$Tajima)
+ks_result_springbutte06_11 <- ks.test(angsd_sfs_springbutte2006_2010_pestPG_filtered$Tajima, angsd_sfs_springbutte2011_2015_pestPG_filtered$Tajima)
+ks_result_springbutte11_16 <- ks.test(angsd_sfs_springbutte2011_2015_pestPG_filtered$Tajima, angsd_sfs_springbutte2016_2018_pestPG_filtered$Tajima)
+ks_result_springbutte96_16 <- ks.test(angsd_sfs_springbutte1996_2000_pestPG_filtered$Tajima, angsd_sfs_springbutte2016_2018_pestPG_filtered$Tajima)
+
+ks_result_springmilldeer96_01 <- ks.test(angsd_sfs_springmilldeer1996_2000_pestPG_filtered$Tajima, angsd_sfs_springmilldeer2001_2005_pestPG_filtered$Tajima)
+ks_result_springmilldeer01_06 <- ks.test(angsd_sfs_springmilldeer2001_2005_pestPG_filtered$Tajima, angsd_sfs_springmilldeer2006_2010_pestPG_filtered$Tajima)
+ks_result_springmilldeer06_16 <- ks.test(angsd_sfs_springmilldeer2006_2010_pestPG_filtered$Tajima, angsd_sfs_springmilldeer2016_2018_pestPG_filtered$Tajima)
+ks_result_springmilldeer96_16 <- ks.test(angsd_sfs_springmilldeer1996_2000_pestPG_filtered$Tajima, angsd_sfs_springmilldeer2016_2018_pestPG_filtered$Tajima)
+
+ks_result_winter96_01 <- ks.test(angsd_sfs_winter1996_2000_pestPG_filtered$Tajima, angsd_sfs_winter2001_2005_pestPG_filtered$Tajima)
+ks_result_winter01_06 <- ks.test(angsd_sfs_winter2001_2005_pestPG_filtered$Tajima, angsd_sfs_winter2006_2010_pestPG_filtered$Tajima)
+ks_result_winter06_16 <- ks.test(angsd_sfs_winter2006_2010_pestPG_filtered$Tajima, angsd_sfs_winter2016_2018_pestPG_filtered$Tajima)
+ks_result_winter96_16 <- ks.test(angsd_sfs_winter1996_2000_pestPG_filtered$Tajima, angsd_sfs_winter2016_2018_pestPG_filtered$Tajima)
+
+# Combine chi-squared results into a list
+ks_results_list <- list(ks_result_fall96_01, ks_result_fall01_06, ks_result_fall06_11, ks_result_fall11_16, ks_result_fall96_16, ks_result_springbutte96_01, ks_result_springbutte01_06, ks_result_springbutte06_11, ks_result_springbutte11_16, ks_result_springbutte96_16, ks_result_springmilldeer96_01, ks_result_springmilldeer01_06, ks_result_springmilldeer06_16, ks_result_springmilldeer96_16, ks_result_winter96_01, ks_result_winter01_06, ks_result_winter06_16, ks_result_winter96_16)
+
+# Print the list
+print(ks_results_list)
+
+
+```
+
+```{r}
+#Do Chi-squared tests to statistically compare differences between Tajima's D distributions over time for each population
+
+# Discretize Tajima values into bins
+bins <- c(-2, -1, 0, 1, 2)
+
+# Create a contingency table
+table_data_fall96_01 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_fall96_01) <- c("fall1996_2000", "fall2001_2005")
+rownames(table_data_fall96_01) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_fall96_01[i, 1] <- sum(angsd_sfs_fall1996_2000_pestPG_filtered$Tajima > bins[i] & angsd_sfs_fall1996_2000_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_fall96_01[i, 2] <- sum(angsd_sfs_fall2001_2005_pestPG_filtered$Tajima > bins[i] & angsd_sfs_fall2001_2005_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_fall96_01 <- chisq.test(table_data_fall96_01)
+
+# Create a contingency table
+table_data_fall01_06 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_fall01_06) <- c("fall2001_2005", "fall2006_2010")
+rownames(table_data_fall01_06) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_fall01_06[i, 1] <- sum(angsd_sfs_fall2001_2005_pestPG_filtered$Tajima > bins[i] & angsd_sfs_fall2001_2005_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_fall01_06[i, 2] <- sum(angsd_sfs_fall2006_2010_pestPG_filtered$Tajima > bins[i] & angsd_sfs_fall2006_2010_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_fall01_06 <- chisq.test(table_data_fall01_06)
+
+# Create a contingency table
+table_data_fall06_11 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_fall06_11) <- c("fall2006_2010", "fall2011_2015")
+rownames(table_data_fall06_11) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_fall06_11[i, 1] <- sum(angsd_sfs_fall2006_2010_pestPG_filtered$Tajima > bins[i] & angsd_sfs_fall2006_2010_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_fall06_11[i, 2] <- sum(angsd_sfs_fall2011_2015_pestPG_filtered$Tajima > bins[i] & angsd_sfs_fall2011_2015_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_fall06_11 <- chisq.test(table_data_fall06_11)
+
+# Create a contingency table
+table_data_fall11_16 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_fall11_16) <- c("fall2011_2015", "fall2016_2018")
+rownames(table_data_fall11_16) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_fall11_16[i, 1] <- sum(angsd_sfs_fall2011_2015_pestPG_filtered$Tajima > bins[i] & angsd_sfs_fall2011_2015_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_fall11_16[i, 2] <- sum(angsd_sfs_fall2016_2018_pestPG_filtered$Tajima > bins[i] & angsd_sfs_fall2016_2018_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_fall11_16 <- chisq.test(table_data_fall11_16)
+
+# Create a contingency table
+table_data_fall96_16 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_fall96_16) <- c("fall1996_2000", "fall2016_2018")
+rownames(table_data_fall96_16) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_fall96_16[i, 1] <- sum(angsd_sfs_fall1996_2000_pestPG_filtered$Tajima > bins[i] & angsd_sfs_fall1996_2000_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_fall96_16[i, 2] <- sum(angsd_sfs_fall2016_2018_pestPG_filtered$Tajima > bins[i] & angsd_sfs_fall2016_2018_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_fall96_16 <- chisq.test(table_data_fall96_16)
+
+
+
+
+# Create a contingency table
+table_data_springbutte96_01 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_springbutte96_01) <- c("springbutte1996_2000", "springbutte2001_2005")
+rownames(table_data_springbutte96_01) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_springbutte96_01[i, 1] <- sum(angsd_sfs_springbutte1996_2000_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springbutte1996_2000_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_springbutte96_01[i, 2] <- sum(angsd_sfs_springbutte2001_2005_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springbutte2001_2005_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_springbutte96_01 <- chisq.test(table_data_springbutte96_01)
+
+# Create a contingency table
+table_data_springbutte01_06 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_springbutte01_06) <- c("springbutte2001_2005", "springbutte2006_2010")
+rownames(table_data_springbutte01_06) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_springbutte01_06[i, 1] <- sum(angsd_sfs_springbutte2001_2005_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springbutte2001_2005_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_springbutte01_06[i, 2] <- sum(angsd_sfs_springbutte2006_2010_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springbutte2006_2010_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_springbutte01_06 <- chisq.test(table_data_springbutte01_06)
+
+# Create a contingency table
+table_data_springbutte06_11 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_springbutte06_11) <- c("springbutte2006_2010", "springbutte2011_2015")
+rownames(table_data_springbutte06_11) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_springbutte06_11[i, 1] <- sum(angsd_sfs_springbutte2006_2010_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springbutte2006_2010_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_springbutte06_11[i, 2] <- sum(angsd_sfs_springbutte2011_2015_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springbutte2011_2015_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_springbutte06_11 <- chisq.test(table_data_springbutte06_11)
+
+# Create a contingency table
+table_data_springbutte11_16 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_springbutte11_16) <- c("springbutte2011_2015", "springbutte2016_2018")
+rownames(table_data_springbutte11_16) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_springbutte11_16[i, 1] <- sum(angsd_sfs_springbutte2011_2015_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springbutte2011_2015_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_springbutte11_16[i, 2] <- sum(angsd_sfs_springbutte2016_2018_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springbutte2016_2018_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_springbutte11_16 <- chisq.test(table_data_springbutte11_16)
+
+# Create a contingency table
+table_data_springbutte96_16 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_springbutte96_16) <- c("springbutte1996_2000", "springbutte2016_2018")
+rownames(table_data_springbutte96_16) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_springbutte96_16[i, 1] <- sum(angsd_sfs_springbutte1996_2000_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springbutte1996_2000_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_springbutte96_16[i, 2] <- sum(angsd_sfs_springbutte2016_2018_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springbutte2016_2018_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_springbutte96_16 <- chisq.test(table_data_springbutte96_16)
+
+
+
+
+
+# Create a contingency table
+table_data_springmilldeer96_01 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_springmilldeer96_01) <- c("springmilldeer1996_2000", "springmilldeer2001_2005")
+rownames(table_data_springmilldeer96_01) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_springmilldeer96_01[i, 1] <- sum(angsd_sfs_springmilldeer1996_2000_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springmilldeer1996_2000_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_springmilldeer96_01[i, 2] <- sum(angsd_sfs_springmilldeer2001_2005_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springmilldeer2001_2005_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_springmilldeer96_01 <- chisq.test(table_data_springmilldeer96_01)
+
+# Create a contingency table
+table_data_springmilldeer01_06 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_springmilldeer01_06) <- c("springmilldeer2001_2005", "springmilldeer2006_2010")
+rownames(table_data_springmilldeer01_06) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_springmilldeer01_06[i, 1] <- sum(angsd_sfs_springmilldeer2001_2005_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springmilldeer2001_2005_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_springmilldeer01_06[i, 2] <- sum(angsd_sfs_springmilldeer2006_2010_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springmilldeer2006_2010_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_springmilldeer01_06 <- chisq.test(table_data_springmilldeer01_06)
+
+# Create a contingency table
+table_data_springmilldeer06_16 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_springmilldeer06_16) <- c("springmilldeer2006_2010", "springmilldeer2016_2018")
+rownames(table_data_springmilldeer06_16) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_springmilldeer06_16[i, 1] <- sum(angsd_sfs_springmilldeer2006_2010_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springmilldeer2006_2010_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_springmilldeer06_16[i, 2] <- sum(angsd_sfs_springmilldeer2016_2018_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springmilldeer2016_2018_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_springmilldeer06_16 <- chisq.test(table_data_springmilldeer06_16)
+
+# Create a contingency table
+table_data_springmilldeer96_16 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_springmilldeer96_16) <- c("springmilldeer1996_2000", "springmilldeer2016_2018")
+rownames(table_data_springmilldeer96_16) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_springmilldeer96_16[i, 1] <- sum(angsd_sfs_springmilldeer1996_2000_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springmilldeer1996_2000_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_springmilldeer96_16[i, 2] <- sum(angsd_sfs_springmilldeer2016_2018_pestPG_filtered$Tajima > bins[i] & angsd_sfs_springmilldeer2016_2018_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_springmilldeer96_16 <- chisq.test(table_data_springmilldeer96_16)
+
+
+
+
+
+# Create a contingency table
+table_data_winter96_01 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_winter96_01) <- c("winter1996_2000", "winter2001_2005")
+rownames(table_data_winter96_01) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_winter96_01[i, 1] <- sum(angsd_sfs_winter1996_2000_pestPG_filtered$Tajima > bins[i] & angsd_sfs_winter1996_2000_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_winter96_01[i, 2] <- sum(angsd_sfs_winter2001_2005_pestPG_filtered$Tajima > bins[i] & angsd_sfs_winter2001_2005_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_winter96_01 <- chisq.test(table_data_winter96_01)
+
+# Create a contingency table
+table_data_winter01_06 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_winter01_06) <- c("winter2001_2005", "winter2006_2010")
+rownames(table_data_winter01_06) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_winter01_06[i, 1] <- sum(angsd_sfs_winter2001_2005_pestPG_filtered$Tajima > bins[i] & angsd_sfs_winter2001_2005_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_winter01_06[i, 2] <- sum(angsd_sfs_winter2006_2010_pestPG_filtered$Tajima > bins[i] & angsd_sfs_winter2006_2010_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_winter01_06 <- chisq.test(table_data_winter01_06)
+
+# Create a contingency table
+table_data_winter06_16 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_winter06_16) <- c("winter2006_2010", "winter2016_2018")
+rownames(table_data_winter06_16) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_winter06_16[i, 1] <- sum(angsd_sfs_winter2006_2010_pestPG_filtered$Tajima > bins[i] & angsd_sfs_winter2006_2010_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_winter06_16[i, 2] <- sum(angsd_sfs_winter2016_2018_pestPG_filtered$Tajima > bins[i] & angsd_sfs_winter2016_2018_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_winter06_16 <- chisq.test(table_data_winter06_16)
+
+# Create a contingency table
+table_data_winter96_16 <- matrix(0, nrow = length(bins) - 1, ncol = 2)
+colnames(table_data_winter96_16) <- c("winter1996_2000", "winter2016_2018")
+rownames(table_data_winter96_16) <- paste("[", bins[-length(bins)], ",", bins[-1], "]", sep = "")
+for (i in 1:(length(bins) - 1)) {
+  table_data_winter96_16[i, 1] <- sum(angsd_sfs_winter1996_2000_pestPG_filtered$Tajima > bins[i] & angsd_sfs_winter1996_2000_pestPG_filtered$Tajima <= bins[i + 1])
+  table_data_winter96_16[i, 2] <- sum(angsd_sfs_winter2016_2018_pestPG_filtered$Tajima > bins[i] & angsd_sfs_winter2016_2018_pestPG_filtered$Tajima <= bins[i + 1])
+}
+# Perform the Chi-Squared Test
+chi_squared_result_winter96_16 <- chisq.test(table_data_winter96_16)
+
+
+# Combine chi-squared results into a list
+chi_squared_results_list <- list(chi_squared_result_fall96_01, chi_squared_result_fall01_06, chi_squared_result_fall06_11, chi_squared_result_fall11_16, chi_squared_result_fall96_16, chi_squared_result_springbutte96_01, chi_squared_result_springbutte01_06, chi_squared_result_springbutte06_11, chi_squared_result_springbutte11_16, chi_squared_result_springbutte96_16, chi_squared_result_springmilldeer96_01, chi_squared_result_springmilldeer01_06, chi_squared_result_springmilldeer06_16, chi_squared_result_springmilldeer96_16, chi_squared_result_winter96_01, chi_squared_result_winter01_06, chi_squared_result_winter06_16, chi_squared_result_winter96_16)
+
+# Print the list
+print(chi_squared_results_list)
+
+
+```
+

@@ -1,0 +1,115 @@
+# R SCRIPT TO PLOT SFS VALUES FOR EACH POPULATION
+```{r}
+basedir="/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_angsd/angsd_results/"
+
+# FALL pop plots
+sfs_fall1996_2000<-scan(paste0(basedir, "/results/fall1996_2000.folded.sfs"))
+barplot(sfs_fall1996_2000)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_fall1996_2000[c(-1, -length(sfs_fall1996_2000))])
+
+sfs_fall2001_2005<-scan(paste0(basedir, "/results/fall2001_2005.folded.sfs"))
+barplot(sfs_fall2001_2005)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_fall2001_2005[c(-1, -length(sfs_fall2001_2005))])
+
+sfs_fall2006_2010<-scan(paste0(basedir, "/results/fall2006_2010.folded.sfs"))
+barplot(sfs_fall2006_2010)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_fall2006_2010[c(-1, -length(sfs_fall2006_2010))])
+
+sfs_fall2011_2015<-scan(paste0(basedir, "angsd_sfs_fall2011_2015.folded.sfs"))
+barplot(sfs_fall2011_2015)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_fall2011_2015[c(-1, -length(sfs_fall2011_2015))])
+
+sfs_fall2016_2018<-scan(paste0(basedir, "/results/fall2016_2018.folded.sfs"))
+barplot(sfs_fall2016_2018)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_fall2016_2018[c(-1, -length(sfs_fall2016_2018))])
+```
+
+# SPRING BUTTE pop plots
+```{r}
+sfs_springbutte1996_2000<-scan(paste0(basedir, "/results/springbutte1996_2000.folded.sfs"))
+barplot(sfs_springbutte1996_2000)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_springbutte1996_2000[c(-1, -length(sfs_springbutte1996_2000))])
+
+sfs_springbutte2001_2005<-scan(paste0(basedir, "/results/springbutte2001_2005.folded.sfs"))
+barplot(sfs_springbutte2001_2005)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_springbutte1996_2000[c(-1, -length(sfs_springbutte1996_2000))])
+
+sfs_springbutte2006_2010<-scan(paste0(basedir, "/results/springbutte2006_2010.folded.sfs"))
+barplot(sfs_springbutte2006_2010)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_springbutte2006_2010[c(-1, -length(sfs_springbutte2006_2010))])
+
+sfs_springbutte2011_2015<-scan(paste0(basedir, "/results/springbutte2011_2015.folded.sfs"))
+barplot(sfs_springbutte2011_2015)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_springbutte2011_2015[c(-1, -length(sfs_springbutte2011_2015))])
+
+sfs_springbutte2016_2018<-scan(paste0(basedir, "/results/springbutte2016_2018.folded.sfs"))
+barplot(sfs_springbutte2016_2018)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_springbutte2016_2018[c(-1, -length(sfs_springbutte2016_2018))])
+```
+
+# SPRING MILL DEER pop plots
+```{r}
+sfs_springmilldeer1996_2000<-scan(paste0(basedir, "/results/springmilldeer1996_2000.folded.sfs"))
+barplot(sfs_springmilldeer1996_2000)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_springmilldeer1996_2000[c(-1, -length(sfs_springmilldeer1996_2000))])
+
+sfs_springmilldeer2001_2005<-scan(paste0(basedir, "/results/springmilldeer2001_2005.folded.sfs"))
+barplot(sfs_springmilldeer2001_2005)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_springmilldeer2001_2005[c(-1, -length(sfs_springmilldeer2001_2005))])
+
+sfs_springmilldeer2006_2010<-scan(paste0(basedir, "/results/springmilldeer2006_2010.folded.sfs"))
+barplot(sfs_springmilldeer2006_2010)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_springmilldeer2006_2010[c(-1, -length(sfs_springmilldeer2006_2010))])
+
+sfs_springmilldeer2011_2015<-scan(paste0(basedir, "/results/springmilldeer2011_2015.folded.sfs"))
+barplot(sfs_springmilldeer2011_2015)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_springmilldeer2011_2015[c(-1, -length(sfs_springmilldeer2011_2015))])
+
+sfs_springmilldeer2016_2018<-scan(paste0(basedir, "/results/springmilldeer2016_2018.folded.sfs"))
+barplot(sfs_springmilldeer2016_2018)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_springmilldeer2016_2018[c(-1, -length(sfs_springmilldeer2016_2018))])
+```
+
+# WINTER pop plots
+```{r}
+sfs_winter1996_2000<-scan(paste0(basedir, "/results/winter1996_2000.folded.sfs"))
+barplot(sfs_winter1996_2000)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_winter1996_2000[c(-1, -length(sfs_winter1996_2000))])
+
+sfs_winter2001_2005<-scan(paste0(basedir, "/results/winter2001_2005.folded.sfs"))
+barplot(sfs_winter2001_2005)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_winter2001_2005[c(-1, -length(sfs_winter2001_2005))])
+
+sfs_winter2006_2010<-scan(paste0(basedir, "/results/winter2006_2010.folded.sfs"))
+barplot(sfs_winter2006_2010)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_winter2006_2010[c(-1, -length(sfs_winter2006_2010))])
+
+sfs_winter2011_2015<-scan(paste0(basedir, "/results/winter2011_2015.folded.sfs"))
+barplot(sfs_winter2011_2015)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_winter2011_2015[c(-1, -length(sfs_winter2011_2015))])
+
+sfs_winter2016_2018<-scan(paste0(basedir, "/results/winter2016_2018.folded.sfs"))
+barplot(sfs_winter2016_2018)
+# mask the bin corresponding to a frequecy of 0 or 1
+barplot(sfs_winter2016_2018[c(-1, -length(sfs_winter2016_2018))])
+```
+
