@@ -1,0 +1,127 @@
+
+```{r}
+
+rm(list=ls())
+#set up environment
+library(tidyverse)
+library(ggplot2)
+library(viridis)
+library(scales)
+library(ggpubr)
+
+
+#import list of all SNPs from VCF
+snps <- read.table("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_gone/snp_sites_prep.txt", header = TRUE)
+head(snps)
+dim(snps)
+
+
+#exclude loci on scaffolds because we don't know where SNPs on scaffolds fall within the genome so can't relate physical and 
+#genetic distance to SNPs on chromosomes
+dim(snps)
+snps.chroms <- snps[which(!grepl("NW_", snps$chromosome)),]
+dim(snps.chroms)
+unique(snps.chroms$chromosome)
+
+
+
+# total genome size = 2,294,859,190 bp or 2.29 Gb
+#Kris Christensen et al. 2018, Chinook salmon (Oncorhynchus tshawytscha) genome and transcriptome, https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0195461&type=printable
+#NCBI accession: https://www.ncbi.nlm.nih.gov/assembly/GCF_018296145.1/#/st
+
+# total genetic distance = 3119.7 cM
+# McKinney et al. 2016, https://onlinelibrary.wiley.com/doi/epdf/10.1111/1755-0998.12479
+
+# 770kb = 1cM
+# O'Leary et al. 2023
+
+
+
+#now we are going to calculate genetic distance (cM) from physical distance (bp) for each SNP
+#note that we are making a very important assumption about recombination rates here: 
+
+#       1) that the genetic distance inferred for each linkage group within the Oncorhynchus tshawytscha reference genome  (see reference above)
+#          provides an accurate reflection of recombination rates for our SNPs, which are located in distinct regions
+#          within each linkage group that may or may not experience the same recombination rate. 
+
+#we are certainly violating this assumptions here, but it's the best we can do with the resources currently available for brook trout,
+#or at least for the reference genome that the brook trout data are mapped to
+
+
+#based on the Christensen et al 2018 PLOS ONE reference genome for Oncorhynchus tshawytscha, we know that the reference assembly is approximately 
+#2.29 Gb long. We also know from this pub that the total genetic length of the linkage map is 3119.7 cM. 
+
+
+#genetic distance from physical distance as follows:
+
+#       2,294,859 kbp/3119.7 cM = 735.6 kbp/cM
+#       O'Leary calculated 770 kbp/cM, which is the value used below
+#       2,170,000 kbp/66.92 cM = 32,427 kbp/cM
+
+#So, we are assuming here that every 770 kbp of physical distance on linkage group 1 is equal to 1 cM of genetic distance (big assumption).
+
+
+
+####GLOBAL DISTANCES REF####
+
+
+
+#we will now loop over each chromosome and use the bp position of each SNP to calculate the cM of each SNP
+chroms = unique(snps.chroms$chromosome) #grab chrom names to loop over
+chroms
+
+results.mat = matrix(nrow = 1, ncol = 4) #create matrix to store genetic map results
+colnames(results.mat) = c("locus", "chromosome", "position", "position_cM")
+
+
+for (j in chroms){
+
+  #subset to target chrom
+  snps.chroms.uniq = subset(snps.chroms, chromosome == j)
+
+  
+  #calculate genetic distance from physical distance
+  snps.chroms.uniq$position_cM = snps.chroms.uniq$position/770000
+
+  
+  #add results to matrix
+  results.mat = rbind(results.mat, snps.chroms.uniq)
+  
+  
+}
+
+
+#format genetic map results
+results.df = as.data.frame(results.mat[-1,])
+head(results.df)
+tail(results.df)
+dim(results.df)
+
+results.final = results.df[,c("locus", "chromosome", "position_cM")]
+colnames(results.final) = c("locus", "chromosome", "position")
+
+results.final$position = round(results.final$position, 2)
+head(results.final)
+
+
+#export genetic map results
+write.table(results.final, "/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_gone/snp_sites_prep2.txt", row.names = FALSE, quote = FALSE, sep = "\t")
+
+
+#create boxplot
+head(results.final)
+
+pdf("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_gone/genetic_map_distances.pdf", width = 12, height = 8)
+ggplot(results.final, aes(x = chromosome, y = position)) +
+  geom_boxplot(fill = "#ff6666", color = "black") +
+  scale_y_continuous("Distance (cM)", limits = c(0,120), breaks = seq(0,120,20)) +
+  scale_x_discrete("Chromosome") +
+  theme(axis.title = element_text(size = 14), axis.text.y = element_text(size = 12),
+        axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+        plot.title = element_text(size = 14)) +
+  ggtitle("Genetic Distance (cM) - Global genetic distance")
+dev.off()
+
+
+
+```

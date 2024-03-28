@@ -1,0 +1,385 @@
+
+```{r}
+
+rm(list=ls())
+library(tibble)
+library(stringr)
+library(plyr)
+library(dplyr)
+library(DataCombine)
+
+#read in genotype data
+geno<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/cv_juv_1kaln_cutoff.snp_panel.IBSonly.sites.ibs", colClasses = "character")
+
+# filter loci
+geno[geno == -1] <- NA
+#only allow loci with 80% missing, removed if >80% missing, first pass
+#geno.1 <- geno[which(rowMeans(!is.na(geno)) > 0.2),]
+#removed_loci <- geno.1[which(rowMeans(!is.na(geno.1)) < 0.2),]
+
+#set column with locus position as first column
+geno <- dplyr::relocate(geno, chr, .after = pos)
+# remove NW loci because they cannot be mapped
+geno <- dplyr::filter(geno, !str_detect(chr, "^NW_"))
+
+#transpose the data, while keeping headers
+genot <- setNames(data.frame(t(geno[,-1])), geno[,1])
+#set row column to the first column and name inds
+genot <- cbind(inds = rownames(genot), genot)
+rownames(genot) <- 1:nrow(genot)
+
+# filter samples to be removed 
+# samples that do not meet threshold for their assigned population (based on Tasha's Sup. Table 1)
+remove<-read.csv("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_LinkNe/filtering/remove.csv", colClasses = "character")
+# remove samples 
+genot.1 <- genot[ ! genot$inds %in% remove$inds, ]
+
+#column with metadata
+meta <- select(genot.1, inds)
+
+#map file
+map<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_gone/Fall1997.map", sep = " ", header = F)
+map$V4 <- as.character(map$V4)
+
+```
+
+```{r}
+
+#remove chromosome, major, and minor rows
+#genot.2 <- genot.1[-(1:3),]
+#format for GONE software
+#genot.2[genot.2 == "1"] <- "2"
+#genot.3<-genot.2
+#genot.3[genot.3 == "0"] <- "1"
+#genot.4<-genot.3
+
+#parse dataframes by genotypes to add accurate loci, then recombine below
+genotAC.1 <- genot.1[, genot.1[2, ] == "A" & genot.1[3, ] == "C"]
+genotAC.1[genotAC.1 == "1"] <- "AA"
+genotAC.2<-genotAC.1
+genotAC.2[genotAC.2 == "0"] <- "CC"
+genotAG.1 <- genot.1[, genot.1[2, ] == "A" & genot.1[3, ] == "G"]
+genotAG.1[genotAG.1 == "1"] <- "AA"
+genotAG.2<-genotAG.1
+genotAG.2[genotAG.2 == "0"] <- "GG"
+genotAT.1 <- genot.1[, genot.1[2, ] == "A" & genot.1[3, ] == "T"]
+genotAT.1[genotAT.1 == "1"] <- "AA"
+genotAT.2<-genotAT.1
+genotAT.2[genotAT.2 == "0"] <- "TT"
+genotCA.1 <- genot.1[, genot.1[2, ] == "C" & genot.1[3, ] == "A"]
+genotCA.1[genotCA.1 == "1"] <- "CC"
+genotCA.2<-genotCA.1
+genotCA.2[genotCA.2 == "0"] <- "AA"
+genotCG.1 <- genot.1[, genot.1[2, ] == "C" & genot.1[3, ] == "G"]
+genotCG.1[genotCG.1 == "1"] <- "CC"
+genotCG.2<-genotCG.1
+genotCG.2[genotCG.2 == "0"] <- "GG"
+genotCT.1 <- genot.1[, genot.1[2, ] == "C" & genot.1[3, ] == "T"]
+genotCT.1[genotCT.1 == "1"] <- "CC"
+genotCT.2<-genotCT.1
+genotCT.2[genotCT.2 == "0"] <- "TT"
+genotGA.1 <- genot.1[, genot.1[2, ] == "G" & genot.1[3, ] == "A"]
+genotGA.1[genotGA.1 == "1"] <- "GG"
+genotGA.2<-genotGA.1
+genotGA.2[genotGA.2 == "0"] <- "AA"
+genotGC.1 <- genot.1[, genot.1[2, ] == "G" & genot.1[3, ] == "C"]
+genotGC.1[genotGC.1 == "1"] <- "GG"
+genotGC.2<-genotGC.1
+genotGC.2[genotGC.2 == "0"] <- "CC"
+genotGT.1 <- genot.1[, genot.1[2, ] == "G" & genot.1[3, ] == "T"]
+genotGT.1[genotGT.1 == "1"] <- "GG"
+genotGT.2<-genotGT.1
+genotGT.2[genotGT.2 == "0"] <- "TT"
+genotTA.1 <- genot.1[, genot.1[2, ] == "T" & genot.1[3, ] == "A"]
+genotTA.1[genotTA.1 == "1"] <- "TT"
+genotTA.2<-genotTA.1
+genotTA.2[genotTA.2 == "0"] <- "AA"
+genotTC.1 <- genot.1[, genot.1[2, ] == "T" & genot.1[3, ] == "C"]
+genotTC.1[genotTC.1 == "1"] <- "TT"
+genotTC.2<-genotTC.1
+genotTC.2[genotTC.2 == "0"] <- "CC"
+genotTG.1 <- genot.1[, genot.1[2, ] == "T" & genot.1[3, ] == "G"]
+genotTG.1[genotTG.1 == "1"] <- "TT"
+genotTG.2<-genotTG.1
+genotTG.2[genotTG.2 == "0"] <- "GG"
+
+#recombine reformatted columns and metadata
+genot.2<-cbind(meta,genotAC.2,genotAG.2,genotAT.2,genotCA.2,genotCG.2,genotCT.2,genotGA.2,genotGC.2,genotGT.2,genotTA.2,genotTC.2,genotTG.2)
+#remove chromosome, major, and minor rows
+genot.3 <- genot.2[-(1:3),]
+# change NA values to 0s
+genot.3[is.na(genot.3)] <- "00"
+# arrange loci to match map order
+map_loci_order <- colnames(genot.1)
+genot.4 <- genot.3[, match(map_loci_order, colnames(genot.3))]
+
+# Identify the genotype column names
+genotype_column <- colnames(genot.4)[-1]  # Exclude the ID column
+# Function to split a single genotype column
+split_genotype <- function(genotype_column) {
+  alleles <- strsplit(genot.4[[genotype_column]], "")
+  allele1 <- sapply(alleles, "[[", 1)
+  allele2 <- sapply(alleles, "[[", 2)
+  genot.4[[paste0(genotype_column, "_A1")]] <- allele1
+  genot.4[[paste0(genotype_column, "_A2")]] <- allele2
+  genot.4 <- genot.4[, -which(names(genot.4) == genotype_column)]  # Remove the original genotype column
+  return(genot.4)
+}
+
+# Apply the split_genotype function to all genotype columns
+for (col in genotype_column) {
+  genot.4 <- split_genotype(col)
+}
+
+# remove loci that are >80% missing across all inds
+loci_threshold <- 0.75  # Set the threshold for the proportion of "0"s
+# Filter columns based on the threshold
+genot.5 <- genot.4[, colMeans(genot.4 == 0, na.rm = TRUE) <= loci_threshold]
+# loci removed
+removed_loci <- names(genot.4)[colMeans(genot.4 == 0, na.rm = TRUE) > loci_threshold]
+# Remove "_A1" and "_A2" from all values
+removed_loci <- gsub("_A1|_A2", "", removed_loci)
+removed_loci <- as.data.frame(removed_loci)
+# Save the removed loci to a text file
+write.table(removed_loci, file = "/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_gone/removed_loci.txt", col.names = FALSE, quote = FALSE, row.names = F)
+#remove the same loci from the map file
+map <- filter(map,!V4 %in% removed_loci$removed_loci)
+write.table(map, "/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_gone/Fall1998.map", row.names = F, quote = F, col.names = F)
+
+
+
+
+
+# remove inds that have >80% missing data
+ind_threshold <- 0.75  # Set the threshold for the proportion of "0"s
+# Filter rows based on the threshold
+genot.6 <- genot.5[rowMeans(genot.5 == 0, na.rm = TRUE) <= ind_threshold, ]
+
+# arrange loci to match map order
+map_loci_order <- as.data.frame(colnames(genot.1))
+new_values <- rep(map_loci_order$map_loci_order, each = 2)
+new_values <- paste0(new_values, rep(c("_A1", "_A2"), length.out = length(new_values)))
+new_map_loci_order <- data.frame(V1 = new_values)
+
+
+genot.6 <- genot.6[, match(new_map_loci_order, colnames(genot.6))]
+
+
+```
+
+```{r}
+
+#import assignment data - this file reflects edits to assignments based on posterior probability thresholds
+assigns.1<-read.csv("/Users/erincollins/Google Drive/My Drive/Erin's Projects/chipps_LinkNe/filtering/assignment_metadata_filtered.csv", colClasses = "character")
+
+#combine assignment metadata with genotype file
+assigns.2<-merge(assigns.1,genot.6, by='inds')
+
+#Father ID, Mother ID, genetic sex, but just add 0s if unknown
+assigns.3<-add_column(assigns.2, FatherID = 0, .after = "inds")
+assigns.3<-add_column(assigns.3, MotherID = 0, .after = "FatherID")
+assigns.3<-add_column(assigns.3, otherID = 0, .after = "MotherID")
+assigns.3<-add_column(assigns.3, ignorecol = -9, .after = "otherID")
+
+## do not need to redo these steps, but included to show how the metadata for assignments were filtered ##
+
+#library(data.table)
+# remove samples filtered out from metadata
+#meta.4<-read.csv("/Users/erincollins/Google Drive/My Drive/Erin's Projects/assignment_metadata.csv", colClasses = "character")
+
+#filter_meta <- meta.4[ ! meta.4$inds %in% remove$inds, ]
+
+# update metadata assignments based on filtering
+#generic_fall <- read.csv("/Users/erincollins/Documents/LinkNe/filtering/generic_fall.csv", colClasses = "character")
+#generic_spring <- read.csv("/Users/erincollins/Documents/LinkNe/filtering/generic_spring.csv", colClasses = "character")
+
+#generic_fall$Fall.subpop.Call<-NA
+#generic_spring$Spring.subpop.Call<-NA
+#generic_spring$Minor.subpop.Call<-NA
+
+# convert to data.table type
+#setDT(filter_meta); setDT(generic_fall); setDT(generic_spring)
+# names of the columns to update
+#colsUpdate <- names(filter_meta)[-1]
+# perform the update, replace the columns colsUpdate in data.raw with
+#  the values of the columsn in colsUpdate from data_new, if IDs match
+#filter_meta.1<-filter_meta[generic_fall, (colsUpdate) := mget(paste0("i.", colsUpdate)), on = .(inds)][]
+#repeat for spring
+#colsUpdate <- names(filter_meta.1)[-1]
+#filter_meta.2<-filter_meta.1[generic_spring, (colsUpdate) := mget(paste0("i.", colsUpdate)), on = .(inds)][]
+
+#export filtered metadata
+#write.csv(filter_meta.2, "/Users/erincollins/Documents/LinkNe/filtering/assignment_metadata_filtered.csv", quote = F, row.names = F)
+
+```
+
+```{r}
+#subset by year and assignments
+
+# Select Rows/individuals by checking values on multiple columns
+Fall1996_99 <- assigns.3[(assigns.3$SampleYear %in% c('1996','1997','1998','1999')) & (assigns.3$Maj.pop2.Call == 'Fall_LateFall'),]
+# remove Na rows
+Fall1996_99 <- Fall1996_99[rowSums(is.na(Fall1996_99)) < ncol(Fall1996_99), ]
+
+Fall1998_04 <- assigns.3[(assigns.3$SampleYear %in% c('1998','1999','2000','2001','2002','2003','2004')) & (assigns.3$Maj.pop2.Call == 'Fall_LateFall'),]
+# remove Na rows
+Fall1998_04 <- Fall1998_04[rowSums(is.na(Fall1998_04)) < ncol(Fall1998_04), ]
+
+Fall1996 <- assigns.3[(assigns.3$SampleYear == '1996' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall'),]
+SpringButte1996 <- assigns.3[assigns.3$SampleYear == '1996' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer1996 <- assigns.3[assigns.3$SampleYear == '1996' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter1996 <- assigns.3[assigns.3$SampleYear == '1996' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall1997 <- assigns.3[(assigns.3$SampleYear == '1997' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall'),]
+SpringButte1997 <- assigns.3[assigns.3$SampleYear == '1997' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer1997 <- assigns.3[assigns.3$SampleYear == '1997' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter1997 <- assigns.3[assigns.3$SampleYear == '1997' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall1998 <- assigns.3[(assigns.3$SampleYear == '1998' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall'),]
+SpringButte1998 <- assigns.3[assigns.3$SampleYear == '1998' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer1998 <- assigns.3[assigns.3$SampleYear == '1998' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter1998 <- assigns.3[assigns.3$SampleYear == '1998' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall1999 <- assigns.3[assigns.3$SampleYear == '1999' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte1999 <- assigns.3[assigns.3$SampleYear == '1999' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer1999 <- assigns.3[assigns.3$SampleYear == '1999' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter1999 <- assigns.3[assigns.3$SampleYear == '1999' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2000 <- assigns.3[assigns.3$SampleYear == '2000' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2000 <- assigns.3[assigns.3$SampleYear == '2000' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2000 <- assigns.3[assigns.3$SampleYear == '2000' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2000 <- assigns.3[assigns.3$SampleYear == '2000' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2001 <- assigns.3[assigns.3$SampleYear == '2001' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2001 <- assigns.3[assigns.3$SampleYear == '2001' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2001 <- assigns.3[assigns.3$SampleYear == '2001' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2001 <- assigns.3[assigns.3$SampleYear == '2001' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2002 <- assigns.3[assigns.3$SampleYear == '2002' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2002 <- assigns.3[assigns.3$SampleYear == '2002' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2002 <- assigns.3[assigns.3$SampleYear == '2002' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2002 <- assigns.3[assigns.3$SampleYear == '2002' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2003 <- assigns.3[assigns.3$SampleYear == '2003' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2003 <- assigns.3[assigns.3$SampleYear == '2003' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2003 <- assigns.3[assigns.3$SampleYear == '2003' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2003 <- assigns.3[assigns.3$SampleYear == '2003' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2004 <- assigns.3[assigns.3$SampleYear == '2004' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2004 <- assigns.3[assigns.3$SampleYear == '2004' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2004 <- assigns.3[assigns.3$SampleYear == '2004' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2004 <- assigns.3[assigns.3$SampleYear == '2004' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2005 <- assigns.3[assigns.3$SampleYear == '2005' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2005 <- assigns.3[assigns.3$SampleYear == '2005' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2005 <- assigns.3[assigns.3$SampleYear == '2005' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2005 <- assigns.3[assigns.3$SampleYear == '2005' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2006 <- assigns.3[assigns.3$SampleYear == '2006' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2006 <- assigns.3[assigns.3$SampleYear == '2006' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2006 <- assigns.3[assigns.3$SampleYear == '2006' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2006 <- assigns.3[assigns.3$SampleYear == '2006' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2007 <- assigns.3[assigns.3$SampleYear == '2007' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2007 <- assigns.3[assigns.3$SampleYear == '2007' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2007 <- assigns.3[assigns.3$SampleYear == '2007' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2007 <- assigns.3[assigns.3$SampleYear == '2007' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2008 <- assigns.3[assigns.3$SampleYear == '2008' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2008 <- assigns.3[assigns.3$SampleYear == '2008' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2008 <- assigns.3[assigns.3$SampleYear == '2008' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2008 <- assigns.3[assigns.3$SampleYear == '2008' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2009 <- assigns.3[assigns.3$SampleYear == '2009' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2009 <- assigns.3[assigns.3$SampleYear == '2009' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2009 <- assigns.3[assigns.3$SampleYear == '2009' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2009 <- assigns.3[assigns.3$SampleYear == '2009' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2010 <- assigns.3[assigns.3$SampleYear == '2010' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2010 <- assigns.3[assigns.3$SampleYear == '2010' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2010 <- assigns.3[assigns.3$SampleYear == '2010' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2010 <- assigns.3[assigns.3$SampleYear == '2010' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2011 <- assigns.3[assigns.3$SampleYear == '2011' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2011 <- assigns.3[assigns.3$SampleYear == '2011' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2011 <- assigns.3[assigns.3$SampleYear == '2011' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2011 <- assigns.3[assigns.3$SampleYear == '2011' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2012 <- assigns.3[assigns.3$SampleYear == '2012' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2012 <- assigns.3[assigns.3$SampleYear == '2012' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2012 <- assigns.3[assigns.3$SampleYear == '2012' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2012 <- assigns.3[assigns.3$SampleYear == '2012' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2013 <- assigns.3[assigns.3$SampleYear == '2013' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2013 <- assigns.3[assigns.3$SampleYear == '2013' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2013 <- assigns.3[assigns.3$SampleYear == '2013' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2013 <- assigns.3[assigns.3$SampleYear == '2013' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2014 <- assigns.3[assigns.3$SampleYear == '2014' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2014 <- assigns.3[assigns.3$SampleYear == '2014' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2014 <- assigns.3[assigns.3$SampleYear == '2014' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2014 <- assigns.3[assigns.3$SampleYear == '2014' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2015 <- assigns.3[assigns.3$SampleYear == '2015' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2015 <- assigns.3[assigns.3$SampleYear == '2015' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2015 <- assigns.3[assigns.3$SampleYear == '2015' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2015 <- assigns.3[assigns.3$SampleYear == '2015' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2016 <- assigns.3[assigns.3$SampleYear == '2016' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2016 <- assigns.3[assigns.3$SampleYear == '2016' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2016 <- assigns.3[assigns.3$SampleYear == '2016' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2016 <- assigns.3[assigns.3$SampleYear == '2016' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2017 <- assigns.3[assigns.3$SampleYear == '2017' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2017 <- assigns.3[assigns.3$SampleYear == '2017' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2017 <- assigns.3[assigns.3$SampleYear == '2017' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2017 <- assigns.3[assigns.3$SampleYear == '2017' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+Fall2018 <- assigns.3[assigns.3$SampleYear == '2018' & assigns.3$Maj.pop2.Call %in% 'Fall_LateFall',]
+SpringButte2018 <- assigns.3[assigns.3$SampleYear == '2018' & assigns.3$Spring.subpop.Call %in% 'WildSpring_Butte',]
+SpringMillDeer2018 <- assigns.3[assigns.3$SampleYear == '2018' & assigns.3$Spring.subpop.Call %in% 'WildSpring_MillDeer',]
+Winter2018 <- assigns.3[assigns.3$SampleYear == '2018' & assigns.3$Maj.pop1.Call %in% 'Winter',]
+
+
+
+
+assign.list <- list(Fall1996_99,Fall1998_04,Fall1996,SpringButte1996,SpringMillDeer1996,Winter1996,Fall1997,SpringButte1997,SpringMillDeer1997,Winter1997,Fall1998,SpringButte1998,SpringMillDeer1998,Winter1998,Fall1999,SpringButte1999,SpringMillDeer1999,Winter1999,Fall2000,SpringButte2000,SpringMillDeer2000,Winter2000,Fall2001,SpringButte2001,SpringMillDeer2001,Winter2001,Fall2002,SpringButte2002,SpringMillDeer2002,Winter2002,Fall2003,SpringButte2003,SpringMillDeer2003,Winter2003,Fall2004,SpringButte2004,SpringMillDeer2004,Winter2004,Fall2005,SpringButte2005,SpringMillDeer2005,Winter2005,Fall2006,SpringButte2006,SpringMillDeer2006,Winter2006,Fall2007,SpringButte2007,SpringMillDeer2007,Winter2007,Fall2008,SpringButte2008,SpringMillDeer2008,Winter2008,Fall2009,SpringButte2009,SpringMillDeer2009,Winter2009,Fall2010,SpringButte2010,SpringMillDeer2010,Winter2010,Fall2011,SpringButte2011,SpringMillDeer2011,Winter2011,Fall2012,SpringButte2012,SpringMillDeer2012,Winter2012,Fall2013,SpringButte2013,SpringMillDeer2013,Winter2013,Fall2014,SpringButte2014,SpringMillDeer2014,Winter2014,Fall2015,SpringButte2015,SpringMillDeer2015,Winter2015,Fall2016,SpringButte2016,SpringMillDeer2016,Winter2016,Fall2017,SpringButte2017,SpringMillDeer2017,Winter2017,Fall2018,SpringButte2018,SpringMillDeer2018,Winter2018)
+
+names(assign.list) = c("Fall1996_99","Fall1998_04","SpringButte1996","Fall1996","SpringMillDeer1996","Winter1996","Fall1997","SpringButte1997","SpringMillDeer1997","Winter1997","Fall1998","SpringButte1998","SpringMillDeer1998","Winter1998","Fall1999","SpringButte1999","SpringMillDeer1999","Winter1999","Fall2000","SpringButte2000","SpringMillDeer2000","Winter2000","Fall2001","SpringButte2001","SpringMillDeer2001","Winter2001","Fall2002","SpringButte2002","SpringMillDeer2002","Winter2002","Fall2003","SpringButte2003","SpringMillDeer2003","Winter2003","Fall2004","SpringButte2004","SpringMillDeer2004","Winter2004","Fall2005","SpringButte2005","SpringMillDeer2005","Winter2005","Fall2006","SpringButte2006","SpringMillDeer2006","Winter2006","Fall2007","SpringButte2007","SpringMillDeer2007","Winter2007","Fall2008","SpringButte2008","SpringMillDeer2008","Winter2008","Fall2009","SpringButte2009","SpringMillDeer2009","Winter2009","Fall2010","SpringButte2010","SpringMillDeer2010","Winter2010","Fall2011","SpringButte2011","SpringMillDeer2011","Winter2011","Fall2012","SpringButte2012","SpringMillDeer2012","Winter2012","Fall2013","SpringButte2013","SpringMillDeer2013","Winter2013","Fall2014","SpringButte2014","SpringMillDeer2014","Winter2014","Fall2015","SpringButte2015","SpringMillDeer2015","Winter2015","Fall2016","SpringButte2016","SpringMillDeer2016","Winter2016","Fall2017","SpringButte2017","SpringMillDeer2017","Winter2017","Fall2018","SpringButte2018","SpringMillDeer2018","Winter2018")
+
+
+#remove assignment columns
+assign.reformat <- lapply(assign.list, function(x) select(x, -Maj.pop1.Call, -Maj.pop2.Call, -Spring.subpop.Call, -Fall.subpop.Call, -Minor.subpop.Call, -SampleYear))
+
+# Add a sequential column as the first column to each non-empty data frame in the list
+assign.reformat.1 <- lapply(assign.reformat, function(x) {
+  if (nrow(x) > 0) {
+    x <- data.frame(SequentialColumn = 1:nrow(x), x)
+  }
+  return(x)
+})
+
+
+
+
+
+# replace "0" with "NA"
+#assign.reformat<-lapply(assign.reformat, function(x) {x[x == "0"] <- NA; x})
+# filters out monomorphic loci
+#assign.reformat<-lapply(assign.reformat, function(x) select_if(x, ~n_distinct(., na.rm = T) > 1))
+#NAs were needed to find monomorphic loci, no turn them back to 000000
+#assign.reformat<-lapply(assign.reformat, function(x) replace(x, is.na(x), "0"))
+
+
+# remove all populations that did not have any samples
+assign.reformat.2 <- assign.reformat.1[which(lapply(assign.reformat.1, nrow) != 0)]
+
+
+#this exports files with pop and year names, but need to remove tab at the beginning of loci row and remaining NAs
+for(i in 1:length(assign.reformat.2)){
+    write.table(data.frame(assign.reformat.2[[i]]), file = paste0(names(assign.reformat.2)[i], '.ped')
+                , sep = " ", quote = F, row.names = F, col.names = F)
+}
+
+```
+

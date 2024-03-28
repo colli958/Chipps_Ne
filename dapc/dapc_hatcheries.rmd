@@ -1,0 +1,606 @@
+
+##adegenet dapc notes
+
+```{r}
+
+rm(list=ls())
+library(adegenet)
+library(tibble)
+library(stringr)
+library(dplyr)
+library(DataCombine)
+
+#read in genotype data
+geno<-read.delim("/Users/erincollins/Google Drive/My Drive/Erin's Projects/Chipps_DAPC/cv_juv_ikaln_cutoff_snp_panel.IBSonly.sites_hatcheries_added.txt", colClasses = "character", header = F)
+#combine chr and loci columns
+geno$V1 <- paste(geno$V1,geno$V2)
+#transpose the data, while keeping headers
+genot <- setNames(data.frame(t(geno[,-1])), geno[,1])
+names(genot) <- sub(" ", "_", names(genot))
+#remove "." from loci names
+names(genot) <- gsub("\\.", "", names(genot))
+#column with metadata
+meta <- select(genot, chr_pos)
+
+```
+
+```{r}
+
+#parse dataframes by genotypes to add accurate loci, then recombine later
+genotAC.1 <- genot[, genot[2, ] == "A" & genot[3, ] == "C"]
+genotAC.1[genotAC.1 == "1"] <- "A"
+genotAC.2<-genotAC.1
+genotAC.2[genotAC.2 == "0"] <- "C"
+genotAG.1 <- genot[, genot[2, ] == "A" & genot[3, ] == "G"]
+genotAG.1[genotAG.1 == "1"] <- "A"
+genotAG.2<-genotAG.1
+genotAG.2[genotAG.2 == "0"] <- "G"
+genotAT.1 <- genot[, genot[2, ] == "A" & genot[3, ] == "T"]
+genotAT.1[genotAT.1 == "1"] <- "A"
+genotAT.2<-genotAT.1
+genotAT.2[genotAT.2 == "0"] <- "T"
+genotCA.1 <- genot[, genot[2, ] == "C" & genot[3, ] == "A"]
+genotCA.1[genotCA.1 == "1"] <- "C"
+genotCA.2<-genotCA.1
+genotCA.2[genotCA.2 == "0"] <- "A"
+genotCG.1 <- genot[, genot[2, ] == "C" & genot[3, ] == "G"]
+genotCG.1[genotCG.1 == "1"] <- "C"
+genotCG.2<-genotCG.1
+genotCG.2[genotCG.2 == "0"] <- "G"
+genotCT.1 <- genot[, genot[2, ] == "C" & genot[3, ] == "T"]
+genotCT.1[genotCT.1 == "1"] <- "C"
+genotCT.2<-genotCT.1
+genotCT.2[genotCT.2 == "0"] <- "T"
+genotGA.1 <- genot[, genot[2, ] == "G" & genot[3, ] == "A"]
+genotGA.1[genotGA.1 == "1"] <- "G"
+genotGA.2<-genotGA.1
+genotGA.2[genotGA.2 == "0"] <- "A"
+genotGC.1 <- genot[, genot[2, ] == "G" & genot[3, ] == "C"]
+genotGC.1[genotGC.1 == "1"] <- "G"
+genotGC.2<-genotGC.1
+genotGC.2[genotGC.2 == "0"] <- "C"
+genotGT.1 <- genot[, genot[2, ] == "G" & genot[3, ] == "T"]
+genotGT.1[genotGT.1 == "1"] <- "G"
+genotGT.2<-genotGT.1
+genotGT.2[genotGT.2 == "0"] <- "T"
+genotTA.1 <- genot[, genot[2, ] == "T" & genot[3, ] == "A"]
+genotTA.1[genotTA.1 == "1"] <- "T"
+genotTA.2<-genotTA.1
+genotTA.2[genotTA.2 == "0"] <- "A"
+genotTC.1 <- genot[, genot[2, ] == "T" & genot[3, ] == "C"]
+genotTC.1[genotTC.1 == "1"] <- "T"
+genotTC.2<-genotTC.1
+genotTC.2[genotTC.2 == "0"] <- "C"
+genotTG.1 <- genot[, genot[2, ] == "T" & genot[3, ] == "G"]
+genotTG.1[genotTG.1 == "1"] <- "T"
+genotTG.2<-genotTG.1
+genotTG.2[genotTG.2 == "0"] <- "G"
+
+#recombine reformatted columns and metadata
+genot.1<-cbind(meta,genotAC.2,genotAG.2,genotAT.2,genotCA.2,genotCG.2,genotCT.2,genotGA.2,genotGC.2,genotGT.2,genotTA.2,genotTC.2,genotTG.2)
+#remove chromosome, major, and minor rows
+genot.2 <- genot.1[-(1:3),]
+
+
+# Use Tasha's Sup.Table 1 for filtering, used fall guidelines because all assigned to fall
+
+#### REMOVES SAMPLES with > 80% missing data ###
+
+genot.2[genot.2 == -1] <- NA
+
+#only keep individuals if 97% missing, remove individuals if >97% missing
+filtered_samples <- genot.2[which(rowMeans(!is.na(genot.2)) > 0.03),]
+removed_samples <- genot.2[which(rowMeans(!is.na(genot.2)) < 0.03),]
+
+#only keep individuals if 80% missing, remove individuals if >80% missing
+filtered_samples.1 <- filtered_samples[which(rowMeans(!is.na(filtered_samples)) > 0.2),]
+removed_samples.1 <- removed_samples[which(rowMeans(!is.na(removed_samples)) < 0.2),]
+
+#checked and the threshold for >80%, same samples are retained, thus fall vs. late-fall assignments are reliable 
+
+# filter loci
+#only keep loci if 80% missing, remove loci if >80% missing
+filtered_samples.2 <- filtered_samples.1[,which(colMeans(!is.na(filtered_samples.1)) > 0.2)]
+removed_samples.2 <- removed_samples.1[,which(colMeans(!is.na(removed_samples.1)) < 0.2)]
+
+
+#export list of individuals that made the threshold
+filtered_inds<-dplyr::select(filtered_samples.2, chr_pos)
+write.csv(filtered_inds, "filtered_inds.csv", quote = F, row.names = F)
+
+#export samples removed for too much missing data
+write.csv(removed_samples.2,"removed_missing_data.csv", quote = F, row.names = F)
+
+```
+
+```{r}
+
+#add comma to loci names and remove comma from last locus name
+names(filtered_samples.2)<-gsub("$",",",names(filtered_samples.2))
+# may need to change this line according to what the name of the last locus is in the filtered samples.2 file
+names(filtered_samples.2)[length(names(filtered_samples.2))]<-"NW_0246098321_210707"
+
+#add title and pop rows
+title<-"title"
+loci<- colnames(filtered_samples.2)
+pop<-"pop"
+#merge all new rows
+meta.2<-rbind(title,loci, pop)
+#set metadata column names to match the genotype column names to allow for merges
+colnames(meta.2)<-colnames(filtered_samples.2)
+
+#merge new metadata rows to dataset
+genot.3<-rbind(meta.2,filtered_samples.2)
+
+#add comma to Individual Name column
+genot.3$inds<-sub("$",",",genot.3$chr_pos)
+
+#remove extra "title" and "pop"s. also remove "inds," from loci row
+genot.3[genot.3 == "title"] <- ""
+genot.3[genot.3 == "pop"] <- ""
+genot.3[genot.3 == "inds,,"] <- ""
+
+#remove commas from title and pop
+genot.3[genot.3 == "title,"] <- "title"
+genot.3[genot.3 == "pop,"] <- "pop"
+
+#export genepop file, open in text editor and remove first blank tab of loci row and resave
+write.table(genot.3, "/Users/erincollins/Google Drive/My Drive/Erin's Projects/Chipps_DAPC/chipps_input_hatcheries.gen", sep = "\t", col.names = F, row.names = T, quote = F)
+
+```
+
+
+
+```{r}
+#run with k=3, for fall, spring, yuba
+
+x<-df2genind(filtered_samples.2, NA.char = NA, ploidy = 1)
+# n.pca keeps all pcs, max.n.clust compares k1-k10, n.iter does 25 iterations, scale divides each mean value by standard deviation
+grp<-find.clusters(x, n.pca = 200, max.n.clust = 10, n.iter = 25, scale = TRUE)
+#to export a table with means for each k
+write.csv(grp$Kstat, "kstats3_hatchery.csv")
+#look at steps below to determine most descriptive k
+
+#to export a table with assigned cluster for each individual based on selected k value
+#this means may have to rerun and change the k value selected before exporting after best k is decided
+write.csv(grp$grp, "/Users/erincollins/Google Drive/My Drive/Erin's Projects/Chipps_DAPC/clust_assign3_hatcheries.csv")
+
+# run dapc to see clusters
+dapc3 <- dapc(x, grp$grp)
+
+#export dapc plot
+pdf("dapc3springonly.pdf", width=8, height=8)
+scatter(dapc3)
+dev.off()
+
+#export file to see which inds are in which cluster
+write.csv(dapc3$grp, "dapc3_springonly.csv")
+
+```
+
+```{r}
+#run with k=4, for fall, spring, yuba
+
+
+# n.pca keeps all pcs, max.n.clust compares k1-k10, n.iter does 25 iterations, scale divides each mean value by standard deviation
+grp<-find.clusters(x, n.pca = 200, max.n.clust = 10, n.iter = 25, scale = TRUE)
+#to export a table with means for each k
+write.csv(grp$Kstat, "kstats4_hatchery.csv")
+#look at steps below to determine most descriptive k
+
+#to export a table with assigned cluster for each individual based on selected k value
+#this means may have to rerun and change the k value selected before exporting after best k is decided
+write.csv(grp$grp, "/Users/erincollins/Google Drive/My Drive/Erin's Projects/Chipps_DAPC/clust_assign4_hatcheries.csv")
+
+# run dapc to see clusters
+dapc4 <- dapc(x, grp$grp)
+
+#export dapc plot
+pdf("dapc4_hatcheries.pdf", width=8, height=8)
+scatter(dapc4)
+dev.off()
+
+#export file to see which inds are in which cluster
+write.csv(dapc4$grp, "dapc4.csv")
+
+```
+
+```{r}
+#run again with k=5, for fall, late-fall, spring-Butte, spring-Mill, spring-Deer
+
+x<-df2genind(filtered_samples.2, NA.char = NA, ploidy = 1)
+# n.pca keeps all pcs, max.n.clust compares k1-k10, n.iter does 25 iterations, scale divides each mean value by standard deviation
+grp<-find.clusters(x, n.pca = 200, max.n.clust = 10, n.iter = 25, scale = TRUE)
+#to export a table with means for each k
+write.csv(grp$Kstat, "kstats5.csv")
+#look at steps below to determine most descriptive k
+
+#to export a table with assigned cluster for each individual based on selected k value
+#this means may have to rerun and change the k value selected before exporting after best k is decided
+write.csv(grp$grp, "/Users/erincollins/Google Drive/My Drive/Erin's Projects/Chipps_DAPC/clust_assign5.csv")
+
+# run dapc to see clusters
+dapc5 <- dapc(x, grp$grp)
+
+#export dapc plot
+pdf("dapc5.pdf", width=8, height=8)
+scatter(dapc5)
+dev.off()
+
+#export file to see which inds are in which cluster
+write.csv(dapc5$grp, "dapc5.csv")
+
+```
+
+```{r}
+### pca of populations in R for all markers
+
+library(adegenet)
+library(ggplot2)
+library(viridis)
+library(tidyverse)
+
+#remove column of ind, so they are not included as loci in the genind format
+filtered_samples.3 <- dplyr::select(filtered_samples.2, -"chr_pos,")
+
+#create genind format
+x<-df2genind(filtered_samples.3, NA.char = NA, ploidy = 1)
+#Import sample metadatas
+meta <- read.csv("/Users/erincollins/Google Drive/My Drive/Erin's Projects/Chipps_DAPC/chipps_metadata.csv", header=TRUE, stringsAsFactors = F, colClasses = "character")
+head(meta)
+
+#to replace 0s with mean values
+x1 <- scaleGen(x, NA.method="mean")
+# do PCA analysis
+ca1 <- dudi.pca(x1,scannf=F,nf=3)
+#ca1$li are the row coordinates i.e. the principal components
+#ca1$eig are the eigenvalues
+
+#plot eigenvalues
+pdf("pca_eigenvalues_springonly.pdf", width=8, height=8)
+barplot(ca1$eig, main="eigenvalues", col=heat.colors(length(ca1$eig)), ylim=c(0,max(ceiling(ca1$eig))))
+box()
+dev.off()
+  
+#calculate % variation explained by each PC axis 
+ev = ca1$eig/sum(ca1$eig)*100 
+
+#import PCA scores and join sample metadata to scores
+scores <- as.data.frame(ca1$li)
+inds <- dplyr::select(filtered_inds, chr_pos)
+scores$inds <- inds$chr_pos
+scores <- dplyr::left_join(scores, meta, by = "inds")
+
+
+#add variable for plotting symbols to scores
+scores$pch = scores$population
+scores$pch = as.character(scores$pch)
+scores$pch[grepl("Fall", scores$pch)] = "21"
+scores$pch[grepl("LateFall", scores$pch)] = "21"
+scores$pch[grepl("WildSpring_MillDeer", scores$pch)] = "22"
+scores$pch[grepl("WildSpring_Butte", scores$pch)] = "22"
+scores$pch[grepl("Winter", scores$pch)] = "24"
+scores$pch[grepl("Fall_Hatchery", scores$pch)] = "21"
+scores$pch[grepl("Spring_Hatchery", scores$pch)] = "22"
+scores$pch = as.integer(scores$pch)
+
+leg.prep<-dplyr::select(scores, population, pch)
+leg.prep<-unique(leg.prep)
+#need to arrange alphabetically to match data colors and shapes to the legend colors and shapes
+leg.prep <- dplyr::arrange(leg.prep, population)
+leg.title = "Populations"
+# this line is getting the color palette ready, turbo is the color palette, and the n= is just getting the number of colors based on the number of populations
+pal = viridis::turbo(n=(length(leg.prep$population)))
+# used the line below for spring only and specified the same colors as the plot with all pops
+#pal = c("#9AFB40", "#FE9F2F")
+leg.labs = leg.prep
+leg.pch = leg.prep$pch
+
+
+# PCA plot axes 1v2
+pdf("pca_1v2_labels_hatchery.pdf", width = 12, height = 8)
+print(ggplot(scores, aes(x=Axis1, y=Axis2)) + 
+        geom_point(size=6, alpha=0.85, pch=scores$pch, color="black", aes(fill=population)) + 
+        scale_fill_manual(name=leg.title, values=pal, labels=leg.labs) +
+        labs(x=paste0("PC1 ", round(ev[1], 2), "%"), y=paste0("PC2 ", round(ev[2], 2), "%"), 
+             title="Chipps Island juveniles 1996-2018: PCA Axes 1v2 ") +
+        theme(axis.text=element_text(size=16), axis.title=element_text(size=18), plot.title=element_text(size=20)) +
+        guides(fill = guide_legend(override.aes = list(shape = leg.pch, size = 5), ncol=1))
+#this line adds labels to each point, it looks messy, but can turn on to make sure legend is correct  
+      #+ geom_text(label=scores$population, size=1.5)
+      # this removes the gray background
+      + theme_bw()
+      )
+dev.off()
+
+
+  # PCA plot axes 1v3
+pdf("pca_1v3_labels_hatchery.pdf", width = 12, height = 8)
+print(ggplot(scores, aes(x=Axis1, y=Axis3)) + 
+        geom_point(size=6, alpha=0.85, pch=scores$pch, color="black", aes(fill=population)) + 
+        scale_fill_manual(name=leg.title, values=pal, labels=leg.labs) +
+        labs(x=paste0("PC1 ", round(ev[1], 2), "%"), y=paste0("PC3 ", round(ev[3], 2), "%"), 
+             title="Chipps Island juveniles 1996-2018: PCA Axes 1v3 ") +
+        theme(axis.text=element_text(size=16), axis.title=element_text(size=18), plot.title=element_text(size=20)) +
+        guides(fill = guide_legend(override.aes = list(shape = leg.pch, size = 5), ncol=1))
+      #+ geom_text(label=scores$population, size=1.5)
+      + theme_bw()
+      )
+dev.off()
+
+```
+
+
+```{r}
+
+# parse and create PCAs by years #
+
+filtered_samples.4 <- dplyr::rename(filtered_samples.2, "inds" = "chr_pos,")
+filtered_samples.4 <- dplyr::left_join(filtered_samples.4, meta, by = "inds")
+filtered_samples.1.1996.2004 <- dplyr::filter(filtered_samples.4, SampleYear<2005)
+filtered_samples.1.2007.2011 <- dplyr::filter(filtered_samples.4, SampleYear>2006 & SampleYear<2012)
+filtered_samples.1.2015.2018 <- dplyr::filter(filtered_samples.4, SampleYear>2014)
+
+#remove column of ind, so they are not included as loci in the genind format
+filtered_samples1996.2004 <- dplyr::select(filtered_samples1996.2004, -"inds", -"SampleID", -"population", -"SampleYear")
+filtered_samples2007.2011 <- dplyr::select(filtered_samples2007.2011, -"inds", -"SampleID", -"population", -"SampleYear")
+filtered_samples2015.2018 <- dplyr::select(filtered_samples2015.2018, -"inds", -"SampleID", -"population", -"SampleYear")
+
+#create genind format
+x1996.2004<-df2genind(filtered_samples1996.2004, NA.char = NA, ploidy = 1)
+x2007.2011<-df2genind(filtered_samples2007.2011, NA.char = NA, ploidy = 1)
+x2015.2018<-df2genind(filtered_samples2015.2018, NA.char = NA, ploidy = 1)
+#to replace 0s with mean values
+x1.1996.2004 <- scaleGen(x1996.2004, NA.method="mean")
+x1.2007.2011 <- scaleGen(x2007.2011, NA.method="mean")
+x1.2015.2018 <- scaleGen(x2015.2018, NA.method="mean")
+
+# do PCA analysis
+ca1.1996.2004 <- dudi.pca(x1.1996.2004,scannf=F,nf=3)
+ca1.2007.2011 <- dudi.pca(x1.2007.2011,scannf=F,nf=3)
+ca1.2015.2018 <- dudi.pca(x1.2015.2018,scannf=F,nf=3)
+#ca1$li are the row coordinates i.e. the principal components
+#ca1$eig are the eigenvalues
+
+#import PCA scores and join sample metadata to scores
+scores1996.2004 <- as.data.frame(ca1.1996.2004$li)
+scores2007.2011 <- as.data.frame(ca1.2007.2011$li)
+scores2015.2018 <- as.data.frame(ca1.2015.2018$li)
+inds1996.2004 <- dplyr::select(filtered_samples.1.1996.2004, inds)
+inds2007.2011 <- dplyr::select(filtered_samples.1.2007.2011, inds)
+inds2015.2018 <- dplyr::select(filtered_samples.1.2015.2018, inds)
+scores1996.2004$inds <- inds1996.2004$inds
+scores2007.2011$inds <- inds2007.2011$inds
+scores2015.2018$inds <- inds2015.2018$inds
+scores1996.2004 <- dplyr::left_join(scores1996.2004, meta, by = "inds")
+scores2007.2011 <- dplyr::left_join(scores2007.2011, meta, by = "inds")
+scores2015.2018 <- dplyr::left_join(scores2015.2018, meta, by = "inds")
+
+#add variable for plotting symbols to scores
+scores1996.2004$pch = scores1996.2004$population
+scores1996.2004$pch = as.character(scores1996.2004$pch)
+scores1996.2004$pch[grepl("Fall", scores1996.2004$pch)] = "21"
+scores1996.2004$pch[grepl("LateFall", scores1996.2004$pch)] = "21"
+scores1996.2004$pch[grepl("WildSpring_MillDeer", scores1996.2004$pch)] = "22"
+scores1996.2004$pch[grepl("WildSpring_Butte", scores1996.2004$pch)] = "22"
+scores1996.2004$pch[grepl("Winter", scores1996.2004$pch)] = "24"
+scores1996.2004$pch = as.integer(scores1996.2004$pch)
+
+scores2007.2011$pch = scores2007.2011$population
+scores2007.2011$pch = as.character(scores2007.2011$pch)
+scores2007.2011$pch[grepl("Fall", scores2007.2011$pch)] = "21"
+scores2007.2011$pch[grepl("LateFall", scores2007.2011$pch)] = "21"
+scores2007.2011$pch[grepl("WildSpring_MillDeer", scores2007.2011$pch)] = "22"
+scores2007.2011$pch[grepl("WildSpring_Butte", scores2007.2011$pch)] = "22"
+scores2007.2011$pch[grepl("Winter", scores2007.2011$pch)] = "24"
+scores2007.2011$pch = as.integer(scores2007.2011$pch)
+
+scores2015.2018$pch = scores2015.2018$population
+scores2015.2018$pch = as.character(scores2015.2018$pch)
+scores2015.2018$pch[grepl("Fall", scores2015.2018$pch)] = "21"
+scores2015.2018$pch[grepl("LateFall", scores2015.2018$pch)] = "21"
+scores2015.2018$pch[grepl("WildSpring_MillDeer", scores2015.2018$pch)] = "22"
+scores2015.2018$pch[grepl("WildSpring_Butte", scores2015.2018$pch)] = "22"
+scores2015.2018$pch[grepl("Winter", scores2015.2018$pch)] = "24"
+scores2015.2018$pch = as.integer(scores2015.2018$pch)
+
+
+leg.prep1996.2004<-dplyr::select(scores1996.2004, population, pch)
+leg.prep1996.2004<-unique(leg.prep1996.2004)
+#need to arrange alphabetically to match data colors and shapes to the legend colors and shapes
+leg.prep1996.2004 <- dplyr::arrange(leg.prep1996.2004, population)
+leg.title1996.2004 = "Populations"
+# this line is getting the color palette ready, turbo is the color palette, and the n= is just getting the number of colors based on the number of populations
+pal1996.2004 = viridis::turbo(n=(length(leg.prep1996.2004$population)))
+leg.labs1996.2004 = leg.prep1996.2004
+leg.pch1996.2004 = leg.prep1996.2004$pch
+
+leg.prep2007.2011<-dplyr::select(scores2007.2011, population, pch)
+leg.prep2007.2011<-unique(leg.prep2007.2011)
+#need to arrange alphabetically to match data colors and shapes to the legend colors and shapes
+leg.prep2007.2011 <- dplyr::arrange(leg.prep2007.2011, population)
+leg.title2007.2011 = "Populations"
+# this line is getting the color palette ready, turbo is the color palette, and the n= is just getting the number of colors based on the number of populations
+pal2007.2011 = viridis::turbo(n=(length(leg.prep2007.2011$population)))
+leg.labs2007.2011 = leg.prep2007.2011
+leg.pch2007.2011 = leg.prep2007.2011$pch
+
+leg.prep2015.2018<-dplyr::select(scores2015.2018, population, pch)
+leg.prep2015.2018<-unique(leg.prep2015.2018)
+#need to arrange alphabetically to match data colors and shapes to the legend colors and shapes
+leg.prep2015.2018 <- dplyr::arrange(leg.prep2015.2018, population)
+leg.title2015.2018 = "Populations"
+# this line is getting the color palette ready, turbo is the color palette, and the n= is just getting the number of colors based on the number of populations
+pal2015.2018 = viridis::turbo(n=(length(leg.prep2015.2018$population)))
+leg.labs2015.2018 = leg.prep2015.2018
+leg.pch2015.2018 = leg.prep2015.2018$pch
+
+# PCA plot axes 1v2 for 1996-2004
+pdf("pca_1v2_labels1996.2004.pdf", width = 12, height = 8)
+print(ggplot(scores1996.2004, aes(x=Axis1, y=Axis2)) + 
+        geom_point(size=6, alpha=0.85, pch=scores1996.2004$pch, color="black", aes(fill=population)) + 
+        scale_fill_manual(name=leg.title1996.2004, values=pal1996.2004, labels=leg.labs1996.2004) +
+        labs(x=paste0("PC1 ", round(ev[1], 2), "%"), y=paste0("PC2 ", round(ev[2], 2), "%"), 
+             title="Chipps Island juveniles 1996-2004: PCA Axes 1v2 ") +
+        theme(axis.text=element_text(size=16), axis.title=element_text(size=18), plot.title=element_text(size=20)) +
+        guides(fill = guide_legend(override.aes = list(shape = leg.pch1996.2004, size = 5), ncol=1))
+      #this line adds labels to each point, it looks messy, but can turn on to make sure legend is correct  
+      #+ geom_text(label=scores1996.2004$population, size=1.5)
+      # this removes the gray background
+      + theme_bw()
+      )
+dev.off()
+
+# PCA plot axes 1v2 for 2007-2011
+pdf("pca_1v2_labels2007.2011.pdf", width = 12, height = 8)
+print(ggplot(scores2007.2011, aes(x=Axis1, y=Axis2)) + 
+        geom_point(size=6, alpha=0.85, pch=scores2007.2011$pch, color="black", aes(fill=population)) + 
+        scale_fill_manual(name=leg.title2007.2011, values=pal2007.2011, labels=leg.labs2007.2011) +
+        labs(x=paste0("PC1 ", round(ev[1], 2), "%"), y=paste0("PC2 ", round(ev[2], 2), "%"), 
+             title="Chipps Island juveniles 2007-2011: PCA Axes 1v2 ") +
+        theme(axis.text=element_text(size=16), axis.title=element_text(size=18), plot.title=element_text(size=20)) +
+        guides(fill = guide_legend(override.aes = list(shape = leg.pch2007.2011, size = 5), ncol=1))
+      #this line adds labels to each point, it looks messy, but can turn on to make sure legend is correct  
+      #+ geom_text(label=scores2007.2011$population, size=1.5)
+      # this removes the gray background
+      + theme_bw()
+      )
+dev.off()
+
+# PCA plot axes 1v2 for 2015-2018
+pdf("pca_1v2_labels2015.2018.pdf", width = 12, height = 8)
+print(ggplot(scores2015.2018, aes(x=Axis1, y=Axis2)) + 
+        geom_point(size=6, alpha=0.85, pch=scores2015.2018$pch, color="black", aes(fill=population)) + 
+        scale_fill_manual(name=leg.title2015.2018, values=pal2015.2018, labels=leg.labs2015.2018) +
+        labs(x=paste0("PC1 ", round(ev[1], 2), "%"), y=paste0("PC2 ", round(ev[2], 2), "%"), 
+             title="Chipps Island juveniles 2015-2018: PCA Axes 1v2 ") +
+        theme(axis.text=element_text(size=16), axis.title=element_text(size=18), plot.title=element_text(size=20)) +
+        guides(fill = guide_legend(override.aes = list(shape = leg.pch2015.2018, size = 5), ncol=1))
+      #this line adds labels to each point, it looks messy, but can turn on to make sure legend is correct  
+      #+ geom_text(label=scores2015.2018$population, size=1.5)
+      # this removes the gray background
+      + theme_bw()
+      )
+dev.off()
+
+```
+
+
+#LEA notes#
+
+#no title row, just data
+#no spaces or periods in names or in population names
+#no indels, change - to 0
+
+#Column 1 = Pedigree
+#Column 2 = Individual ID
+#Column 3 = Father ID, 0 if unknown
+#Column 4 = Mother ID, 0 if unknown
+#Column 5 = Sex, 1=M,XY, 2=F,XX, 0=Unknown and 0=YY
+#Column 6 = Affected, 0 if unknown, 1 if unaffected, and 2 if affected
+#			This can also represent phenotype data (maybe this is what affected means?)
+#			Coded Winter/Spring=1, Summer=2, Unknown=0
+#Column 7-? = Marker alleles, each marker gets 2 columns
+
+#Leave title row and population data (but be sure to remove any spaces in popnames), while creating the file
+
+```{r}
+
+#install.packages(c("fields","RColorBrewer","mapplots"))
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+   # install.packages("BiocManager")
+#BiocManager::install(version = "3.17")
+#BiocManager::install("LEA")
+source("http://membres-timc.imag.fr/Olivier.Francois/Conversion.R")
+source("http://membres-timc.imag.fr/Olivier.Francois/POPSutilities.R")
+library(LEA)
+
+# to load a previously used project
+#project = load.snmfProject("filtered.snmfProject")
+
+# prep to format without filtering loci because they were causing an error, maybe odd number of loci
+filtered_samples.5 <- dplyr::rename(filtered_samples.1, "inds"="chr_pos")
+filtered_samples.5 <- dplyr::left_join(filtered_samples.5, meta, by = "inds")
+# sort the filtered_samples by population column
+filtered_samples.5 <- dplyr::arrange(filtered_samples.5, population)
+filtered_samples.5 <- dplyr::select(filtered_samples.5, -"SampleID", -"population", -"SampleYear") 
+
+# Convert to .ped format #
+#Father and Mother ID, but just add 0s if unknown
+filtered_samples.6<-add_column(filtered_samples.5, Pedigree = "Chipps", .before = "inds")
+filtered_samples.6<-add_column(filtered_samples.6, FatherID = 0, .after = "inds")
+filtered_samples.6<-add_column(filtered_samples.6, MotherID = 0, .after = "FatherID")
+filtered_samples.6<-add_column(filtered_samples.6, Sex = 0, .after = "MotherID")
+filtered_samples.6<-add_column(filtered_samples.6, Affected = 0, .after = "Sex")
+#replace NA with 0
+filtered_samples.6[is.na(filtered_samples.6)]<-0
+#export .ped file
+write.table(filtered_samples.6, "filtered.ped", sep = "\t", quote = F, row.names = F, col.names = F)
+
+
+
+# ## ## WARNING: this will fail if header row is included #####
+# ## ## other potential reason for failing, used filtered loci, which left an uneven number of loci ####
+ped2geno("filtered.ped", force = TRUE)
+#analysis to find k
+obj.snmf = snmf("./filtered.geno", K = 1:6, ploidy = 2, entropy = T, repetitions = 25, CPU = 1, project = "new")
+
+
+
+#plot k
+plot(obj.snmf, col = "blue4", cex = 1.4, pch = 19)
+
+
+##### admix 3 ####
+
+#admixture analysis with k of 3 based on dip in plot
+obj.snmf.3 = snmf("./filtered.geno", K = 3, alpha = 100, project = "new")
+qmatrix.3 = Q(obj.snmf.3, K = 3)
+
+#to plot admixture - rerun this chunk only when rearranging colors
+tiff("/Users/erincollins/Google Drive/My Drive/Erin's Projects/Chipps_DAPC/admixplot3.tiff", height = 20, width = 40, units = 'cm', compression = "lzw", res = 500)
+barplot(t(qmatrix.3), col = c("blue","purple","green"), border = NA, space = 0, xlab = "Individuals", ylab = "Admixture coefficients")
+dev.off()
+
+# check this file to get the order of populations, then can arrange the colors accordingly in the next chunk of code that plots these data
+# get the admixture coefficient matrix, Q, for the 1st run for K = 3. 
+res.3 = Q(obj.snmf.3, K = 3, run = 1)
+write.csv(res.3,file = "admix_inds3.csv")
+
+
+#### admix 4 ####
+
+#admixture analysis with k of 4 based on dip in plot
+obj.snmf.4 = snmf("./filtered.geno", K = 4, alpha = 100, project = "new")
+qmatrix.4 = Q(obj.snmf.4, K = 4)
+
+#to plot admixture - rerun this chunk only when rearranging colors
+tiff("/Users/erincollins/Google Drive/My Drive/Erin's Projects/Chipps_DAPC/admixplot4.tiff", height = 20, width = 40, units = 'cm', compression = "lzw", res = 500)
+barplot(t(qmatrix.4), col = c("blue","green","purple","orange"), border = NA, space = 0, xlab = "Individuals", ylab = "Admixture coefficients")
+dev.off()
+
+# check this file to get the order of populations, then can arrange the colors accordingly in the next chunk of code that plots these data
+# get the admixture coefficient matrix, Q, for the 1st run for K = 4. 
+res.4 = Q(obj.snmf.4, K = 4, run = 1)
+write.csv(res.4, file = "admix_inds4.csv")
+
+
+#### admix 5 ####
+
+#admixture analysis with k of 5 based on dip in plot
+obj.snmf.5 = snmf("./filtered.geno", K = 5, alpha = 100, project = "new")
+qmatrix.5 = Q(obj.snmf.5, K = 5)
+
+#to plot admixture - rerun this chunk only when rearranging colors
+tiff("/Users/erincollins/Google Drive/My Drive/Erin's Projects/Chipps_DAPC/admixplot5.tiff", height = 20, width = 40, units = 'cm', compression = "lzw", res = 500)
+barplot(t(qmatrix.5), col = c("blue","purple","green","orange","red"), border = NA, space = 0, xlab = "Individuals", ylab = "Admixture coefficients")
+dev.off()
+
+# check this file to get the order of populations, then can arrange the colors accordingly in the next chunk of code that plots these data
+# get the admixture coefficient matrix, Q, for the 1st run for K = 5. 
+res.5 = Q(obj.snmf.5, K = 5, run = 1)
+write.csv(res.5, file = "admix_inds5.csv")
+
+
+
+```

@@ -1,0 +1,29 @@
+GONE notes
+
+to download GONE:
+go to downGit: https://minhaskamal.github.io/DownGit/#/home?url=https:%2F%2Fgithub.com%2Fesrud%2FGONE%2Ftree%2Fmaster%2FMacOSX
+input the link to the GONE materials: https://github.com/esrud/GONE/tree/master/Linux
+click download
+
+input files:
+INPUT_PARAMETERS_FILE
+.ped and .map files
+
+permissions:
+locally, use the mac version, but this does not work
+only use the linux version on the server, maybe because it is the correct gcc that is required for GONE
+give chmod +x permissions for all files in the PROGRAMMES directory
+
+to run:
+#the .ped and .map files need to have matching names like example.ped and example.map
+bash script_GONE.sh example 
+
+
+How to get the program to assume a single likelihood allele instead of 2
+
+
+Input parameters file
+changed phase from 2 to 0 and 1 - did not work
+
+pop_ancient.ped; a = 15,031; c = 4,969; total loci = 20,000
+pop_ancient.map; 10,000 loci
